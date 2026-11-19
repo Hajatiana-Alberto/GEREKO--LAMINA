@@ -1,0 +1,45 @@
+
+name: Construire GEREKO et LAMINA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Extraire les projets
+        run: |
+          ZIP=$(find . -maxdepth 1 -name '*.zip' | head -n 1)
+          unzip -q "$ZIP" -d /tmp/source
+          
+      - name: Compiler les APK
+        run: |
+          cd /tmp/source/GEREKO-LAMINA-GitHub
+          gradle assembleDebug
+
+      - name: Publier les APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: GEREKO-LAMINA-APK
+          path: |
+            /tmp/source/GEREKO-LAMINA-GitHub/gereko/build/outputs/apk/debug/*.apk
+            /tmp/source/GEREKO-LAMINA-GitHub/lamina/build/outputs/apk/debug/*.apk
